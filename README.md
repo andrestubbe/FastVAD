@@ -124,11 +124,6 @@ FastVAD is rigorously profiled using **JMH** to guarantee zero overhead.
 | **Interactive 120-Column HUD Demo** | [Demo.java](src/main/java/fastvad/Demo.java) | `run-demo.bat` | Real-time synthetic audio stream simulation with SNR tracking & Barge-In visualization. |
 | **JMH Microbenchmark Suite** | [FastVADBenchmark.java](examples/Benchmark/src/main/java/fastvad/benchmark/FastVADBenchmark.java) | `run-benchmark.bat` | Formal OpenJDK JMH throughput measurements across alternating speech/silence frames. |
 
-Run the hero demo locally from the command line:
-```bash
-.\run-demo.bat
-```
-
 ---
 
 ## Installation
