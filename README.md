@@ -152,7 +152,7 @@ if (vad.isInSpeech()) {
 ## Installation
 
 ### Option 1: Maven (Recommended)
-Add the JitPack repository and the dependency to your `pom.xml`:
+Add the JitPack repository and the dependencies to your `pom.xml`:
 
 ```xml
 <repositories>
@@ -163,10 +163,18 @@ Add the JitPack repository and the dependency to your `pom.xml`:
 </repositories>
 
 <dependencies>
+    <!-- FastVAD Core -->
     <dependency>
         <groupId>com.github.andrestubbe</groupId>
         <artifactId>FastVAD</artifactId>
         <version>0.1.0</version>
+    </dependency>
+
+    <!-- FastAudioProcess DSP Substrate -->
+    <dependency>
+        <groupId>com.github.andrestubbe</groupId>
+        <artifactId>FastAudioProcess</artifactId>
+        <version>0.1.1</version>
     </dependency>
 </dependencies>
 ```
@@ -179,6 +187,7 @@ repositories {
 
 dependencies {
     implementation 'com.github.andrestubbe:FastVAD:0.1.0'
+    implementation 'com.github.andrestubbe:FastAudioProcess:0.1.1'
 }
 ```
 
@@ -186,7 +195,8 @@ dependencies {
 Download the latest JARs directly to add them to your classpath:
 
 1. 📦 **[FastVAD-0.1.0.jar](https://github.com/andrestubbe/FastVAD/releases/download/0.1.0/FastVAD-0.1.0.jar)** (The Core Engine)
-2. ⚙️ **[fastcore-0.1.0.jar](https://github.com/andrestubbe/FastCore/releases/download/0.1.0/fastcore-0.1.0.jar)** (The Mandatory Native Loader)
+2. 🔊 **[FastAudioProcess-0.1.1.jar](https://github.com/andrestubbe/FastAudioProcess/releases/download/0.1.1/FastAudioProcess-0.1.1.jar)** (The DSP Resampler & Filter Substrate)
+3. ⚙️ **[fastcore-0.1.0.jar](https://github.com/andrestubbe/FastCore/releases/download/0.1.0/fastcore-0.1.0.jar)** (The Mandatory Native Loader)
 
 ---
 
