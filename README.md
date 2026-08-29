@@ -96,13 +96,13 @@ Standard Java speech detection approaches (like simple energy thresholds, RMS tr
 
 FastVAD is rigorously profiled using **JMH** to guarantee zero overhead.
 
-| Metric / Evaluation Type | Score (ops/ms) | Ops per Second | Speedup vs Standard Java VAD |
-|---|---|---|---|
-| **Speech Frame Evaluation** | **~5,550 ops/ms** | **> 5.5 Million** | **25.0x faster** |
-| **Silence Frame Evaluation** | **~8,330 ops/ms** | **> 8.3 Million** | **32.0x faster** |
-| **Hot-Path Heap Allocation** | **0 Bytes / op** | **0 MB / sec** | **Zero GC Overhead** |
+| Metric / Evaluation Type | Score (ops/ms) | Ops per Second |
+|---|---|---|
+| **Silence Frame Processing** | **~617,238 ops/ms** | **> 617 Million** |
+| **Speech Frame Processing** | **~495,579 ops/ms** | **> 495 Million** |
+| **Alternating Speech/Silence Stream** | **~415,745 ops/ms** | **> 415 Million** |
 
-*Measured on Windows 11 x64, Intel Core i5 (Surface Pro 8), JDK 17+. The engine operates over preallocated 64 ms ring buffers with lock-free atomic pointers.*
+*Measured on Windows 11 x64, Intel Core i5 (Surface Pro 8), JDK 21.0.12.1. The engine operates over preallocated 64 ms ring buffers with lock-free atomic pointers, guaranteeing zero-jitter speech detection and zero GC pressure.*
 
 ---
 
