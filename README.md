@@ -198,6 +198,11 @@ Download the latest JARs directly to add them to your classpath:
 2. 🔊 **[FastAudioProcess-0.1.1.jar](https://github.com/andrestubbe/FastAudioProcess/releases/download/0.1.1/FastAudioProcess-0.1.1.jar)** (The DSP Resampler & Filter Substrate)
 3. ⚙️ **[fastcore-0.1.0.jar](https://github.com/andrestubbe/FastCore/releases/download/0.1.0/fastcore-0.1.0.jar)** (The Mandatory Native Loader)
 
+### 🧠 Neural Model Weights (Silero VAD v5)
+The pre-trained, production-grade Silero VAD v5 ONNX model is already bundled in the repository:
+* 📁 **Bundled Location**: `models/silero_vad.onnx` (~2.2 MB)
+* 🌐 **Upstream Official Download**: [snakers4/silero-vad (GitHub Release)](https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx)
+
 ---
 
 ## Technical Examples & Hero Demos
