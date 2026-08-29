@@ -1,0 +1,11 @@
+fastvad\benchmark\jmh_generated\FastVADBenchmark_benchmarkAlternatingStream_jmhTest.class
+fastvad\benchmark\jmh_generated\FastVADBenchmark_jmhType_B3.class
+fastvad\benchmark\jmh_generated\FastVADBenchmark_jmhType_B2.class
+META-INF\BenchmarkList
+fastvad\benchmark\FastVADBenchmark$1.class
+fastvad\benchmark\jmh_generated\FastVADBenchmark_benchmarkSpeechFrameProcessing_jmhTest.class
+fastvad\benchmark\jmh_generated\FastVADBenchmark_jmhType_B1.class
+META-INF\CompilerHints
+fastvad\benchmark\jmh_generated\FastVADBenchmark_benchmarkSilenceFrameProcessing_jmhTest.class
+fastvad\benchmark\jmh_generated\FastVADBenchmark_jmhType.class
+fastvad\benchmark\FastVADBenchmark.class

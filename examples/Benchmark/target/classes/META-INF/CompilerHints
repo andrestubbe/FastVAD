@@ -1,0 +1,10 @@
+dontinline,*.*_all_jmhStub
+dontinline,*.*_avgt_jmhStub
+dontinline,*.*_sample_jmhStub
+dontinline,*.*_ss_jmhStub
+dontinline,*.*_thrpt_jmhStub
+inline,fastvad/benchmark/FastVADBenchmark.benchmarkAlternatingStream
+inline,fastvad/benchmark/FastVADBenchmark.benchmarkSilenceFrameProcessing
+inline,fastvad/benchmark/FastVADBenchmark.benchmarkSpeechFrameProcessing
+inline,fastvad/benchmark/FastVADBenchmark.setup
+inline,fastvad/benchmark/FastVADBenchmark.tearDown

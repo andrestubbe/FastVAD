@@ -154,6 +154,13 @@ Add the JitPack repository and the dependencies to your `pom.xml`:
         <artifactId>FastAudioProcess</artifactId>
         <version>0.1.1</version>
     </dependency>
+
+    <!-- FastAIModel ONNX Runtime Substrate -->
+    <dependency>
+        <groupId>com.github.andrestubbe.FastAIModel</groupId>
+        <artifactId>fastaimodel-onnx</artifactId>
+        <version>0.1.4</version>
+    </dependency>
 </dependencies>
 ```
 
@@ -166,6 +173,7 @@ repositories {
 dependencies {
     implementation 'com.github.andrestubbe:FastVAD:0.1.0'
     implementation 'com.github.andrestubbe:FastAudioProcess:0.1.1'
+    implementation 'com.github.andrestubbe.FastAIModel:fastaimodel-onnx:0.1.4'
 }
 ```
 

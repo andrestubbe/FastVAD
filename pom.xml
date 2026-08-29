@@ -51,6 +51,14 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- FastAIModel ONNX Engine Substrate -->
+        <dependency>
+            <groupId>com.github.andrestubbe.FastAIModel</groupId>
+            <artifactId>fastaimodel-onnx</artifactId>
+            <version>0.1.4</version>
+            <optional>true</optional>
+        </dependency>
+
         <!-- FastCore for native library resolution -->
         <dependency>
             <groupId>com.github.andrestubbe</groupId>
