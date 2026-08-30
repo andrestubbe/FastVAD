@@ -5,31 +5,31 @@
 extern "C" {
 #endif
 
-JNIEXPORT jlong JNICALL Java_fastvad_nativebridge_FastVADNative_initModel
+JNIEXPORT jlong JNICALL Java_fastvad_FastVADNative_initModel
   (JNIEnv *, jclass, jstring);
 
-JNIEXPORT jlong JNICALL Java_fastvad_nativebridge_FastVADNative_initRingBuffer
+JNIEXPORT jlong JNICALL Java_fastvad_FastVADNative_initRingBuffer
   (JNIEnv *, jclass, jint);
 
-JNIEXPORT jlong JNICALL Java_fastvad_nativebridge_FastVADNative_initWebRtc
+JNIEXPORT jlong JNICALL Java_fastvad_FastVADNative_initWebRtc
   (JNIEnv *, jclass);
 
-JNIEXPORT void JNICALL Java_fastvad_nativebridge_FastVADNative_pushFrame
+JNIEXPORT void JNICALL Java_fastvad_FastVADNative_pushFrame
   (JNIEnv *, jclass, jlong, jlong, jfloatArray);
 
-JNIEXPORT jfloat JNICALL Java_fastvad_nativebridge_FastVADNative_runVad
+JNIEXPORT jfloat JNICALL Java_fastvad_FastVADNative_runVad
   (JNIEnv *, jclass, jlong, jlong);
 
-JNIEXPORT jint JNICALL Java_fastvad_nativebridge_FastVADNative_runWebRtc
+JNIEXPORT jint JNICALL Java_fastvad_FastVADNative_runWebRtc
   (JNIEnv *, jclass, jlong, jshortArray);
 
-JNIEXPORT void JNICALL Java_fastvad_nativebridge_FastVADNative_destroyModel
+JNIEXPORT void JNICALL Java_fastvad_FastVADNative_destroyModel
   (JNIEnv *, jclass, jlong);
 
-JNIEXPORT void JNICALL Java_fastvad_nativebridge_FastVADNative_destroyRingBuffer
+JNIEXPORT void JNICALL Java_fastvad_FastVADNative_destroyRingBuffer
   (JNIEnv *, jclass, jlong);
 
-JNIEXPORT void JNICALL Java_fastvad_nativebridge_FastVADNative_destroyWebRtc
+JNIEXPORT void JNICALL Java_fastvad_FastVADNative_destroyWebRtc
   (JNIEnv *, jclass, jlong);
 
 #ifdef __cplusplus
