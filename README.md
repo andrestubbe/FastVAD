@@ -221,11 +221,15 @@ MIT License — See [LICENSE](LICENSE) for details.
 Combine FastVAD with other FastJava audio and AI accelerators:
 
 * [**FastAudioProcess**](https://github.com/andrestubbe/FastAudioProcess) — Hardware SIMD-accelerated DSP filters and resampling.
-* [**FastAudioCapture**](https://github.com/andrestubbe/FastAudioCapture) — Low-latency WASAPI microphone capture.
-* [**FastWakeWord**](https://github.com/andrestubbe/FastWakeWord) — Neural wake-word trigger detector.
-* [**FastSTT**](https://github.com/andrestubbe/FastSTT) — High-throughput speech-to-text recognition.
-* [**FastTTS**](https://github.com/andrestubbe/FastTTS) — Low-latency text-to-speech synthesis.
+* [**FastAudioCapture**](https://github.com/andrestubbe/FastAudioCapture) — Zero-copy WASAPI audio loopback & microphone capture.
+* [**FastTurn**](https://github.com/andrestubbe/FastTurn) — Real-time turn-taking and speech interruption latency detector.
+* [**FastWakeWord**](https://github.com/andrestubbe/FastWakeWord) — Neural wake-word and keyword spotting detector.
+* [**FastSTT**](https://github.com/andrestubbe/FastSTT) — High-throughput local speech-to-text recognition.
+* [**FastTTS**](https://github.com/andrestubbe/FastTTS) — Low-latency neural text-to-speech synthesis.
+* [**FastSIMD**](https://github.com/andrestubbe/FastSIMD) — Hardware SIMD vectorization primitives.
+* [**FastCore**](https://github.com/andrestubbe/FastCore) — Native JNI Loader and Utilities.
+* [**FastExecution**](https://github.com/andrestubbe/FastExecution) — High-precision audio scheduling engine.
 
 ---
 
-**Part of the FastJava Ecosystem** — *Making the JVM faster.*
+*Part of the FastJava Ecosystem — Making the JVM faster. Small package. Maximum speed. Zero bloat. 🚀*
