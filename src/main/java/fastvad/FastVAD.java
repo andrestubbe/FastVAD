@@ -68,6 +68,13 @@ public final class FastVAD implements AutoCloseable {
     private int startFrames = DEFAULT_START_FRAMES;
     private int endFrames = DEFAULT_END_FRAMES;
 
+    // Preallocated circular history buffers for temporal modulation & pitch variance tracking (20 frames = 200ms)
+    private static final int HISTORY_SIZE = 20;
+    private final float[] periodicityHistory = new float[HISTORY_SIZE];
+    private final float[] rmsHistory = new float[HISTORY_SIZE];
+    private int historyIdx = 0;
+    private int historyFilled = 0;
+
     // Preallocated buffer for zero-alloc short conversion
     private final short[] shortFrameBuffer = new short[DEFAULT_FRAME_SAMPLES];
 
@@ -144,7 +151,31 @@ public final class FastVAD implements AutoCloseable {
         float zcr = FastAudioAcoustics.computeZeroCrossingRate(frame16k);
         float periodicity = FastAudioAcoustics.computeAutocorrelationPeriodicity(frame16k, 35, 160);
 
-        // True Speech Criteria:
+        // Update temporal context (200ms sliding window)
+        periodicityHistory[historyIdx] = periodicity;
+        rmsHistory[historyIdx] = rms;
+        historyIdx = (historyIdx + 1) % HISTORY_SIZE;
+        if (historyFilled < HISTORY_SIZE) historyFilled++;
+
+        // Compute Temporal Dynamic Modulation (Speech has natural pitch & energy fluctuations; ambient music is frozen)
+        float pMin = 1.0f, pMax = 0.0f;
+        float rmsMin = 100.0f, rmsMax = -100.0f;
+        for (int i = 0; i < historyFilled; i++) {
+            float pVal = periodicityHistory[i];
+            if (pVal < pMin) pMin = pVal;
+            if (pVal > pMax) pMax = pVal;
+            float rVal = rmsHistory[i];
+            if (rVal < rmsMin) rmsMin = rVal;
+            if (rVal > rmsMax) rmsMax = rVal;
+        }
+        float pitchVariance = pMax - pMin;
+        float rmsDelta = rmsMax - rmsMin;
+
+        // Static Ambience / Drone Rejection:
+        // Ambient pads & synthesizer tones have locked high periodicity (>0.85) and static RMS delta (< 1.5dB) across 200ms
+        boolean isStaticAmbience = (historyFilled >= 15) && (periodicity >= 0.82f && pitchVariance < 0.08f && rmsDelta < 2.0f);
+
+        // True Human Speech Criteria:
         // Rain is stationary Gaussian noise (low crest ~1.2, broad white spectrum).
         // Keyboard clicks & sharp transience: unphysical spikes (crest > 3.4), high erratic ZCR.
         // Human vowels: fundamental glottal formants (periodicity >= 0.45, low ZCR < 0.22, moderate crest 1.38-3.4).
@@ -153,7 +184,7 @@ public final class FastVAD implements AutoCloseable {
         boolean hasVoicedVowels = (periodicity >= 0.45f && zcr < 0.22f && crest >= 1.38f && crest <= 3.4f);
         boolean hasConsonants   = (zcr >= 0.18f && zcr <= 0.32f && crest >= 2.0f && crest <= 3.4f && periodicity >= 0.35f);
 
-        boolean isSpeech = hasSignalEnergy && (hasVoicedVowels || hasConsonants);
+        boolean isSpeech = hasSignalEnergy && (hasVoicedVowels || hasConsonants) && !isStaticAmbience;
 
         updateState(isSpeech, speechProbability, rms, noiseFloor);
         return inSpeech;
