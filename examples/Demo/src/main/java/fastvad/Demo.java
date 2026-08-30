@@ -92,6 +92,9 @@ public final class Demo {
                 float micCrest = 0.0f;
                 float micZcr = 0.0f;
                 float micPeriodicity = 0.0f;
+                int voiceHold = 0;
+                int musicHold = 0;
+                int noiseHold = 0;
                 AudioClass classification = AudioClass.SILENCE;
 
                 if (micLine != null && micLine.available() >= 320) {
@@ -122,15 +125,56 @@ public final class Demo {
 
                     boolean isSpeech = vad.processFrame(micFrame, micRms, noiseFloor);
 
-                    // 4-Way Audio Classification
+                    AudioClass rawClass;
                     if (micRms < 12.0f || micRms <= (noiseFloor + 3.0f)) {
-                        classification = AudioClass.SILENCE;
+                        rawClass = AudioClass.SILENCE;
                     } else if (isSpeech || (micPeriodicity >= 0.40f && micZcr < 0.25f && micRms > (noiseFloor + 5.0f))) {
-                        classification = AudioClass.VOICE;
+                        rawClass = AudioClass.VOICE;
                     } else if (micPeriodicity >= 0.70f && micCrest >= 2.5f) {
-                        classification = AudioClass.MUSIC;
+                        rawClass = AudioClass.MUSIC;
                     } else {
-                        classification = AudioClass.NOISE;
+                        rawClass = AudioClass.NOISE;
+                    }
+
+                    // Temporal Smoothing Buffer (15 frames = 150ms hold)
+                    if (rawClass == AudioClass.VOICE) {
+                        voiceHold = 18;
+                        musicHold = 0;
+                        noiseHold = 0;
+                        classification = AudioClass.VOICE;
+                    } else if (rawClass == AudioClass.MUSIC) {
+                        if (voiceHold <= 0) {
+                            musicHold = 15;
+                            noiseHold = 0;
+                            classification = AudioClass.MUSIC;
+                        } else {
+                            voiceHold--;
+                            classification = AudioClass.VOICE;
+                        }
+                    } else if (rawClass == AudioClass.NOISE) {
+                        if (voiceHold <= 0 && musicHold <= 0) {
+                            noiseHold = 10;
+                            classification = AudioClass.NOISE;
+                        } else if (voiceHold > 0) {
+                            voiceHold--;
+                            classification = AudioClass.VOICE;
+                        } else {
+                            musicHold--;
+                            classification = AudioClass.MUSIC;
+                        }
+                    } else { // SILENCE
+                        if (voiceHold > 0) {
+                            voiceHold--;
+                            classification = AudioClass.VOICE;
+                        } else if (musicHold > 0) {
+                            musicHold--;
+                            classification = AudioClass.MUSIC;
+                        } else if (noiseHold > 0) {
+                            noiseHold--;
+                            classification = AudioClass.NOISE;
+                        } else {
+                            classification = AudioClass.SILENCE;
+                        }
                     }
                 }
 
