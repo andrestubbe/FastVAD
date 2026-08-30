@@ -197,9 +197,13 @@ public final class Demo {
                     micZcr = fastaudioprocess.FastAudioAcoustics.computeZeroCrossingRate(micFrame);
                     micPeriodicity = fastaudioprocess.FastAudioAcoustics.computeAutocorrelationPeriodicity(micFrame, 35, 160);
 
-                    // Dynamic Noise Floor Tracking
-                    if (!micVad.isInSpeech() && micRms < (noiseFloor + 3.0f)) {
-                        noiseFloor = (noiseFloor * 0.98f) + (micRms * 0.02f);
+                    // Dynamic Noise Floor Tracking: tracks continuous background noise upwards and downwards when speech is false
+                    if (!micVad.isInSpeech()) {
+                        if (micRms > noiseFloor) {
+                            noiseFloor = (noiseFloor * 0.95f) + (micRms * 0.05f); // Fast adapt up to ambient noise
+                        } else {
+                            noiseFloor = (noiseFloor * 0.98f) + (micRms * 0.02f); // Slow adapt down to true silence
+                        }
                     }
 
                     micSpeech = micVad.processFrame(micFrame, micRms, noiseFloor);
