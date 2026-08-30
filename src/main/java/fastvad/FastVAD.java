@@ -192,17 +192,12 @@ public final class FastVAD implements AutoCloseable {
         boolean isStaticAmbience = (historyFilled >= 15) && (periodicity >= 0.82f && pitchVariance < 0.08f && rmsDelta < 2.0f);
 
         // True Human Speech Criteria:
-        // When Silero Neural Engine is active, it detects speech with >99% precision trained on 6,000+ languages
+        // When Silero Neural Engine is active, it outputs neural probability; combine with acoustic formants
         boolean hasSignalEnergy = (rms >= 13.0f) && (rms > (noiseFloor + 3.0f));
-        boolean isSpeech;
+        boolean hasVoicedVowels = (periodicity >= 0.45f && zcr < 0.22f && crest >= 1.38f && crest <= 3.4f);
+        boolean hasConsonants   = (zcr >= 0.18f && zcr <= 0.32f && crest >= 2.0f && crest <= 3.4f && periodicity >= 0.35f);
 
-        if (silero != null) {
-            isSpeech = hasSignalEnergy && (speechProbability > startThreshold);
-        } else {
-            boolean hasVoicedVowels = (periodicity >= 0.45f && zcr < 0.22f && crest >= 1.38f && crest <= 3.4f);
-            boolean hasConsonants   = (zcr >= 0.18f && zcr <= 0.32f && crest >= 2.0f && crest <= 3.4f && periodicity >= 0.35f);
-            isSpeech = hasSignalEnergy && (hasVoicedVowels || hasConsonants) && !isStaticAmbience;
-        }
+        boolean isSpeech = hasSignalEnergy && (speechProbability > 0.35f || hasVoicedVowels || hasConsonants) && !isStaticAmbience;
 
         updateState(isSpeech, speechProbability, rms, noiseFloor);
         return inSpeech;
