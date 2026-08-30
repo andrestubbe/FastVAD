@@ -58,7 +58,7 @@ public final class Demo {
         FastKeyboard keyboard = new FastKeyboardImpl();
         try {
             keyboard.startListening((deviceHandle, vKey, makeCode, isPressed, isE0, timestamp, keyChar) -> {
-                if (isPressed && (vKey == Keys.ESCAPE || vKey == 0x51 || vKey == Keys.SPACE)) {
+                if (isPressed && (vKey == Keys.ESCAPE)) {
                     isRunning.set(false);
                 }
             });
