@@ -145,10 +145,10 @@ public final class FastVAD implements AutoCloseable {
         float periodicity = FastAudioAcoustics.computeAutocorrelationPeriodicity(frame16k, 35, 160);
 
         // True Speech Criteria:
-        // Rain is stationary Gaussian noise: low crest factor (< 2.0), lack of formant dynamics.
-        // Human vowels have distinct impulse peak glottal pulses: crest >= 1.9, high periodicity, low ZCR.
-        boolean hasSignalEnergy = (rms >= 15.0f) && (rms > (noiseFloor + 4.5f));
-        boolean hasVoicedVowels = (periodicity >= 0.50f && zcr < 0.20f && crest >= 1.9f);
+        // Rain is stationary Gaussian noise (low crest ~1.2, broad white spectrum).
+        // Vowels and periodic speech tones have crest >= 1.40, periodicity >= 0.45, and low ZCR < 0.22.
+        boolean hasSignalEnergy = (rms >= 14.0f) && (rms > (noiseFloor + 4.0f));
+        boolean hasVoicedVowels = (periodicity >= 0.45f && zcr < 0.22f && crest >= 1.38f);
         boolean hasConsonants   = (zcr >= 0.20f && zcr <= 0.35f && crest >= 2.5f && periodicity >= 0.35f);
 
         boolean isSpeech = hasSignalEnergy && (hasVoicedVowels || hasConsonants);
