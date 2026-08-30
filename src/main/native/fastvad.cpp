@@ -111,14 +111,29 @@ JNIEXPORT jfloat JNICALL Java_fastvad_nativebridge_FastVADNative_runVad
     float window[WINDOW_SAMPLES];
     ring->readLatest(window, WINDOW_SAMPLES);
 
-    // Compute energy/spectral heuristic
+    // Multi-feature DSP discriminator: energy, ZCR, and Crest factor
     float energy = 0.0f;
+    int zcr = 0;
+    float peak = 0.0f;
     for (int i = 0; i < WINDOW_SAMPLES; ++i) {
-        energy += window[i] * window[i];
+        float val = window[i];
+        float absVal = std::abs(val);
+        if (absVal > peak) peak = absVal;
+        energy += val * val;
+        if (i > 0 && ((val >= 0.0f && window[i-1] < 0.0f) || (val < 0.0f && window[i-1] >= 0.0f))) {
+            zcr++;
+        }
     }
-    energy = std::sqrt(energy / WINDOW_SAMPLES);
+    float rms = std::sqrt(energy / WINDOW_SAMPLES);
+    float zcrRate = (float)zcr / (float)WINDOW_SAMPLES;
+    float crest = (rms > 1e-4f) ? (peak / rms) : 0.0f;
 
-    return energy > 0.02f ? 0.95f : 0.05f;
+    // Speech: RMS > 0.015, moderate ZCR (< 0.28), reasonable Crest (< 3.5)
+    // Continuous rain/fan noise: high ZCR (> 0.35) or low crest/low SNR
+    if (rms > 0.02f && zcrRate < 0.25f && crest <= 3.4f) {
+        return 0.90f;
+    }
+    return 0.05f;
 }
 
 JNIEXPORT jint JNICALL Java_fastvad_nativebridge_FastVADNative_runWebRtc
