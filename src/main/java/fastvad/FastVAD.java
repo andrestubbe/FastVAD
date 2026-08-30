@@ -197,7 +197,7 @@ public final class FastVAD implements AutoCloseable {
         boolean isSpeech = (speechProbability >= 0.50f) && hasSignalEnergy && !isStaticAmbience;
 
         updateState(isSpeech, speechProbability, rms, noiseFloor);
-        return inSpeech;
+        return isSpeech || inSpeech;
     }
 
     /**
