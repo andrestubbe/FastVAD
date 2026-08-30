@@ -220,7 +220,7 @@ public final class FastVAD implements AutoCloseable {
      * @param noiseFloor estimated background noise floor in decibels
      */
     private void updateState(boolean isSpeech, float p, float rms, float noiseFloor) {
-        boolean loudEnough = (rms >= 14.0f) && (rms > noiseFloor + 3.0f);
+        boolean loudEnough = (rms >= 12.0f) && (rms > noiseFloor + 2.0f);
 
         if (isSpeech && loudEnough) {
             speechCount++;
