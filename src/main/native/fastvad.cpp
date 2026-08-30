@@ -72,7 +72,7 @@ static inline void computeSpectralFeatures(const float* pcm, int n, float* outMa
 }
 
 // --- JNI Implementation ---
-JNIEXPORT jlong JNICALL Java_fastvad_nativebridge_FastVADNative_initModel
+JNIEXPORT jlong JNICALL Java_fastvad_FastVADNative_initModel
   (JNIEnv* env, jclass, jstring jpath) {
     const char* path = jpath ? env->GetStringUTFChars(jpath, nullptr) : nullptr;
     auto* model = new FastModel(path);
@@ -80,19 +80,19 @@ JNIEXPORT jlong JNICALL Java_fastvad_nativebridge_FastVADNative_initModel
     return reinterpret_cast<jlong>(model);
 }
 
-JNIEXPORT jlong JNICALL Java_fastvad_nativebridge_FastVADNative_initRingBuffer
+JNIEXPORT jlong JNICALL Java_fastvad_FastVADNative_initRingBuffer
   (JNIEnv*, jclass, jint capacitySamples) {
     auto* ring = new FastRingBuffer(capacitySamples);
     return reinterpret_cast<jlong>(ring);
 }
 
-JNIEXPORT jlong JNICALL Java_fastvad_nativebridge_FastVADNative_initWebRtc
+JNIEXPORT jlong JNICALL Java_fastvad_FastVADNative_initWebRtc
   (JNIEnv*, jclass) {
     auto* s = new WebRtcState();
     return reinterpret_cast<jlong>(s);
 }
 
-JNIEXPORT void JNICALL Java_fastvad_nativebridge_FastVADNative_pushFrame
+JNIEXPORT void JNICALL Java_fastvad_FastVADNative_pushFrame
   (JNIEnv* env, jclass, jlong, jlong ringPtr, jfloatArray jframe) {
     auto* ring = reinterpret_cast<FastRingBuffer*>(ringPtr);
     if (!ring) return;
@@ -102,7 +102,7 @@ JNIEXPORT void JNICALL Java_fastvad_nativebridge_FastVADNative_pushFrame
     env->ReleaseFloatArrayElements(jframe, data, JNI_ABORT);
 }
 
-JNIEXPORT jfloat JNICALL Java_fastvad_nativebridge_FastVADNative_runVad
+JNIEXPORT jfloat JNICALL Java_fastvad_FastVADNative_runVad
   (JNIEnv*, jclass, jlong, jlong ringPtr) {
     auto* ring = reinterpret_cast<FastRingBuffer*>(ringPtr);
     if (!ring) return 0.0f;
@@ -136,7 +136,7 @@ JNIEXPORT jfloat JNICALL Java_fastvad_nativebridge_FastVADNative_runVad
     return 0.05f;
 }
 
-JNIEXPORT jint JNICALL Java_fastvad_nativebridge_FastVADNative_runWebRtc
+JNIEXPORT jint JNICALL Java_fastvad_FastVADNative_runWebRtc
   (JNIEnv* env, jclass, jlong webrtcPtr, jshortArray jframe) {
     auto* s = reinterpret_cast<WebRtcState*>(webrtcPtr);
     if (!s) return 1;
@@ -151,17 +151,20 @@ JNIEXPORT jint JNICALL Java_fastvad_nativebridge_FastVADNative_runWebRtc
     return (sum / (len > 0 ? len : 1)) > 350 ? 1 : 0;
 }
 
-JNIEXPORT void JNICALL Java_fastvad_nativebridge_FastVADNative_destroyModel
+JNIEXPORT void JNICALL Java_fastvad_FastVADNative_destroyModel
   (JNIEnv*, jclass, jlong ptr) {
-    delete reinterpret_cast<FastModel*>(ptr);
+    auto* model = reinterpret_cast<FastModel*>(ptr);
+    delete model;
 }
 
-JNIEXPORT void JNICALL Java_fastvad_nativebridge_FastVADNative_destroyRingBuffer
+JNIEXPORT void JNICALL Java_fastvad_FastVADNative_destroyRingBuffer
   (JNIEnv*, jclass, jlong ptr) {
-    delete reinterpret_cast<FastRingBuffer*>(ptr);
+    auto* ring = reinterpret_cast<FastRingBuffer*>(ptr);
+    delete ring;
 }
 
-JNIEXPORT void JNICALL Java_fastvad_nativebridge_FastVADNative_destroyWebRtc
+JNIEXPORT void JNICALL Java_fastvad_FastVADNative_destroyWebRtc
   (JNIEnv*, jclass, jlong ptr) {
-    delete reinterpret_cast<WebRtcState*>(ptr);
+    auto* s = reinterpret_cast<WebRtcState*>(ptr);
+    delete s;
 }
