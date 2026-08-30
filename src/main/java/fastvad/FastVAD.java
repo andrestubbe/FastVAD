@@ -1,13 +1,58 @@
 package fastvad;
 
-import fastvad.events.FastVADEvents;
-import fastvad.nativebridge.FastVADNative;
+import fastaudioprocess.FastAudioAcoustics;
 
 /**
- * Ultra-Fast Voice Activity Detection (Dual-Engine Silero-ONNX + WebRTC Safety-Net).
- * Provides sub-10ms speech segment boundary detection with zero hot-path heap allocations.
+ * High-Performance Dual-Engine Voice Activity Detector (Silero-ONNX & WebRTC).
+ * <p>
+ * Provides sub-10ms speech segment boundary detection with zero hot-path heap allocations,
+ * harmonic pitch autocorrelation, and configurable debounce hysteresis via hardware-accelerated JNI
+ * and FastAudioProcess acoustic analysis primitives.
+ * </p>
+ *
+ * <h2>Usage Example:</h2>
+ * <pre>{@code
+ * FastVAD vad = new FastVAD(new FastVADEvents() {
+ *     @Override
+ *     public void onSpeechStart() {
+ *         System.out.println("User started speaking! Stop Agent TTS immediately.");
+ *     }
+ *
+ *     @Override
+ *     public void onSpeechEnd() {
+ *         System.out.println("User stopped speaking! Dispatch audio buffer to FastSTT.");
+ *     }
+ * });
+ *
+ * // Ingest 10ms (160 samples @ 16 kHz) PCM frames:
+ * boolean isSpeaking = vad.processFrame(frame16k, rmsDb, noiseFloorDb);
+ * }</pre>
  */
 public final class FastVAD implements AutoCloseable {
+
+    /** Standard PCM audio sampling rate (16 kHz). */
+    public static final int DEFAULT_SAMPLE_RATE = 16000;
+
+    /** Standard frame duration in milliseconds (10 ms). */
+    public static final int DEFAULT_FRAME_MS = 10;
+
+    /** Number of samples per 10ms frame at 16 kHz (160 samples). */
+    public static final int DEFAULT_FRAME_SAMPLES = 160;
+
+    /** Default off-heap ring buffer capacity (1.0 second = 16,000 float samples). */
+    public static final int DEFAULT_RING_BUFFER_CAPACITY = 16000;
+
+    /** Default speech start probability threshold (p > 0.50). */
+    public static final float DEFAULT_START_THRESHOLD = 0.50f;
+
+    /** Default speech end silence probability threshold (p < 0.30). */
+    public static final float DEFAULT_END_THRESHOLD = 0.30f;
+
+    /** Default speech start debounce hysteresis frames (2 frames = 20 ms). */
+    public static final int DEFAULT_START_FRAMES = 2;
+
+    /** Default speech end tail hysteresis frames (20 frames = 200 ms). */
+    public static final int DEFAULT_END_FRAMES = 20;
 
     private final long modelPtr;
     private final long ringPtr;
@@ -18,27 +63,51 @@ public final class FastVAD implements AutoCloseable {
     private int speechCount = 0;
     private int silenceCount = 0;
 
-    private float startThreshold = 0.60f;
-    private float endThreshold = 0.30f;
-    private int startFrames = 3;  // 3 x 10ms = 30ms hysteresis
-    private int endFrames = 20;   // 20 x 10ms = 200ms tail hysteresis
+    private float startThreshold = DEFAULT_START_THRESHOLD;
+    private float endThreshold = DEFAULT_END_THRESHOLD;
+    private int startFrames = DEFAULT_START_FRAMES;
+    private int endFrames = DEFAULT_END_FRAMES;
 
     // Preallocated buffer for zero-alloc short conversion
-    private final short[] shortFrameBuffer = new short[160];
+    private final short[] shortFrameBuffer = new short[DEFAULT_FRAME_SAMPLES];
 
+    /**
+     * Creates a new FastVAD instance using default settings and the embedded native C++ inference engine.
+     *
+     * @param events callback listener for speech start/end events
+     */
     public FastVAD(FastVADEvents events) {
-        this(null, events);
+        this(null, DEFAULT_RING_BUFFER_CAPACITY, events);
     }
 
+    /**
+     * Creates a new FastVAD instance with an optional Silero-ONNX neural model weights file.
+     *
+     * @param sileroModelPath path to the silero_vad.onnx model, or null for embedded native engine
+     * @param events          callback listener for speech start/end events
+     */
     public FastVAD(String sileroModelPath, FastVADEvents events) {
+        this(sileroModelPath, DEFAULT_RING_BUFFER_CAPACITY, events);
+    }
+
+    /**
+     * Creates a new FastVAD instance with customizable ring buffer capacity and optional ONNX model.
+     *
+     * @param sileroModelPath    path to the silero_vad.onnx model, or null for embedded native engine
+     * @param ringBufferCapacity capacity of off-heap ring buffer in float samples (e.g. 16000 for 1s)
+     * @param events             callback listener for speech start/end events
+     */
+    public FastVAD(String sileroModelPath, int ringBufferCapacity, FastVADEvents events) {
         this.events = events != null ? events : new FastVADEvents() {
             @Override public void onSpeechStart() {}
             @Override public void onSpeechEnd() {}
         };
 
+        int capacity = ringBufferCapacity > 0 ? ringBufferCapacity : DEFAULT_RING_BUFFER_CAPACITY;
+
         if (FastVADNative.isNativeLoaded()) {
             this.modelPtr  = sileroModelPath != null ? FastVADNative.initModel(sileroModelPath) : 0;
-            this.ringPtr   = FastVADNative.initRingBuffer(16000); // 1s ring buffer
+            this.ringPtr   = FastVADNative.initRingBuffer(capacity);
             this.webrtcPtr = FastVADNative.initWebRtc();
         } else {
             this.modelPtr  = 0;
@@ -48,45 +117,61 @@ public final class FastVAD implements AutoCloseable {
     }
 
     /**
-     * Process a 10ms 16kHz Mono audio frame (160 float samples in [-1.0, 1.0]).
+     * Processes a single 10ms 16kHz mono audio frame (160 normalized float samples in [-1.0, 1.0])
+     * through the native acoustic neural classifier, FastAudioProcess acoustic discriminators, and WebRTC filter.
+     *
+     * @param frame16k   normalized float audio samples
+     * @param rms        current Root Mean Square (RMS) energy in decibels
+     * @param noiseFloor estimated ambient background noise floor in decibels
+     * @return true if speech is currently active, false otherwise
      */
     public boolean processFrame(float[] frame16k, float rms, float noiseFloor) {
-        float sileroP = 0.0f;
+        float speechProbability = 0.0f;
         int webrtc = 1;
 
         if (FastVADNative.isNativeLoaded() && ringPtr != 0) {
             FastVADNative.pushFrame(modelPtr, ringPtr, frame16k);
-            if (modelPtr != 0) {
-                sileroP = FastVADNative.runVad(modelPtr, ringPtr);
-            } else {
-                sileroP = computeEnergyProbability(rms, noiseFloor);
-            }
+            speechProbability = FastVADNative.runVad(modelPtr, ringPtr);
 
             if (webrtcPtr != 0) {
                 floatToShortFast(frame16k, shortFrameBuffer);
                 webrtc = FastVADNative.runWebRtc(webrtcPtr, shortFrameBuffer);
             }
-        } else {
-            // Pure JVM Fallback
-            sileroP = computeEnergyProbability(rms, noiseFloor);
-            webrtc = rms > (noiseFloor + 3.0f) ? 1 : 0;
         }
 
-        boolean sileroSpeech = sileroP > startThreshold;
+        // Acoustic Feature Discrimination powered by FastAudioProcess
+        float crest = FastAudioAcoustics.computeCrestFactor(frame16k);
+        float zcr = FastAudioAcoustics.computeZeroCrossingRate(frame16k);
+        float periodicity = FastAudioAcoustics.computeAutocorrelationPeriodicity(frame16k, 35, 160);
+
+        boolean isVoiced = (periodicity >= 0.35f && zcr < 0.35f && crest <= 3.6f);
+        boolean isConsonant = (zcr >= 0.22f && zcr <= 0.40f && crest <= 3.2f && rms > (noiseFloor + 4.0f));
+
+        if (isVoiced || isConsonant) {
+            speechProbability = Math.max(speechProbability, 0.85f);
+        } else if (crest > 3.6f) {
+            speechProbability = 0.10f; // Reject non-speech impulsive spikes
+        } else {
+            speechProbability = Math.min(speechProbability, 0.20f);
+        }
+
+        boolean sileroSpeech = speechProbability > startThreshold;
         boolean webrtcSpeech = (webrtc == 1) || (webrtcPtr == 0);
         boolean isSpeech = sileroSpeech && webrtcSpeech;
 
-        updateState(isSpeech, sileroP, rms, noiseFloor);
+        updateState(isSpeech, speechProbability, rms, noiseFloor);
         return inSpeech;
     }
 
-    private float computeEnergyProbability(float rms, float noiseFloor) {
-        float snr = rms - noiseFloor;
-        if (snr <= 0.0f) return 0.05f;
-        if (snr >= 20.0f) return 0.95f;
-        return 0.05f + (snr / 20.0f) * 0.90f;
-    }
-
+    /**
+     * Updates the debounce hysteresis counters and fires speech state transition events.
+     * Prevents sporadic flip-flopping caused by single-frame noise spikes or brief speech pauses.
+     *
+     * @param isSpeech   instantaneous speech classification from the dual-engine filter
+     * @param p          estimated speech probability from native classifier
+     * @param rms        current frame RMS energy in decibels
+     * @param noiseFloor estimated background noise floor in decibels
+     */
     private void updateState(boolean isSpeech, float p, float rms, float noiseFloor) {
         boolean loudEnough = rms > (noiseFloor + 4.0f);
 
@@ -107,10 +192,23 @@ public final class FastVAD implements AutoCloseable {
         }
     }
 
+    /**
+     * Returns true if the detector is currently inside an active speech segment.
+     *
+     * @return true if speech is active, false if background silence is present
+     */
     public boolean isInSpeech() {
         return inSpeech;
     }
 
+    /**
+     * Configures the detection sensitivity and debounce hysteresis windows.
+     *
+     * @param startTh     speech start probability threshold (0.0 to 1.0, default 0.60)
+     * @param endTh       speech end silence threshold (0.0 to 1.0, default 0.30)
+     * @param startFrames number of consecutive speech frames required to trigger start (default 3 = 30ms)
+     * @param endFrames   number of consecutive silence frames required to trigger end (default 20 = 200ms)
+     */
     public void setHysteresis(float startTh, float endTh, int startFrames, int endFrames) {
         this.startThreshold = startTh;
         this.endThreshold = endTh;
@@ -118,6 +216,13 @@ public final class FastVAD implements AutoCloseable {
         this.endFrames = endFrames;
     }
 
+    /**
+     * Converts normalized floating-point audio samples [-1.0, 1.0] into signed 16-bit PCM shorts.
+     * Employs zero-allocation preallocated target buffer clamping.
+     *
+     * @param src source array of normalized float audio samples
+     * @param dst destination array of 16-bit PCM short samples
+     */
     private static void floatToShortFast(float[] src, short[] dst) {
         int len = Math.min(src.length, dst.length);
         for (int i = 0; i < len; i++) {
@@ -128,6 +233,9 @@ public final class FastVAD implements AutoCloseable {
         }
     }
 
+    /**
+     * Releases and closes all allocated native models, off-heap ring buffers, and WebRTC states.
+     */
     @Override
     public void close() {
         if (FastVADNative.isNativeLoaded()) {
