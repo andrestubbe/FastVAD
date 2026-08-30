@@ -219,9 +219,7 @@ public final class Demo {
 
                 // Render Stacked HUD every 40ms
                 if (frameIdx % 4 == 0) {
-                    boolean showFileVoice = fileSpeech || fileHangover > 0;
-                    boolean showMicVoice  = micSpeech  || micHangover > 0;
-                    renderStackedDualHud(frameIdx, fileRms, showFileVoice, speakerPaused, micRms, showMicVoice, micMuted, noiseFloor);
+                    renderStackedDualHud(frameIdx, fileRms, fileSpeech, speakerPaused, micRms, micSpeech, micMuted, noiseFloor);
                 }
 
                 long now = System.currentTimeMillis();
