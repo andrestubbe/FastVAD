@@ -143,7 +143,7 @@ struct WebRtcVadEngine {
         }
 
         // Sigmoid mapping of Log-Likelihood to [0.0, 1.0] probability
-        float prob = 1.0f / (1.0f + std::exp(-0.4f * (logLikelihoodRatio - 1.5f)));
+        float prob = 1.0f / (1.0f + std::exp(-0.25f * logLikelihoodRatio));
         return std::max(0.0f, std::min(1.0f, prob));
     }
 };
