@@ -191,9 +191,11 @@ public final class FastVAD implements AutoCloseable {
         // Ambient pads & synthesizer tones have locked high periodicity (>0.85) and static RMS delta (< 1.5dB) across 200ms
         boolean isStaticAmbience = (historyFilled >= 15) && (periodicity >= 0.82f && pitchVariance < 0.08f && rmsDelta < 2.0f);
 
-        // Pure Silero-VAD Neural Decision:
-        // Silero model outputs speech probability directly in [0.0, 1.0]
-        boolean isSpeech = (speechProbability > startThreshold);
+        // Silero-VAD Neural Score + Formant Confirmation:
+        // Silero model provides high speech probability; acoustic harmonicity provides formant confirmation
+        boolean hasSignalEnergy = (rms >= 13.0f) && (rms > (noiseFloor + 3.0f));
+        boolean hasHarmonicVowels = (periodicity >= 0.45f && zcr < 0.22f && crest >= 1.38f && crest <= 3.4f);
+        boolean isSpeech = hasSignalEnergy && (speechProbability > 0.40f || hasHarmonicVowels);
 
         updateState(isSpeech, speechProbability, rms, noiseFloor);
         return inSpeech;
