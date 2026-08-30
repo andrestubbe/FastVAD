@@ -144,20 +144,14 @@ public final class FastVAD implements AutoCloseable {
         float zcr = FastAudioAcoustics.computeZeroCrossingRate(frame16k);
         float periodicity = FastAudioAcoustics.computeAutocorrelationPeriodicity(frame16k, 35, 160);
 
-        // Strict Speech Criteria:
-        // 1. Minimum SNR: Frame RMS must be distinctly louder than the background noise floor
-        boolean hasSignalEnergy = (rms >= 16.0f) && (rms > (noiseFloor + 6.0f));
-        // 2. Harmonic Voiced Formants: Periodicity >= 0.50, low ZCR (< 0.20), low crest (< 3.2)
-        boolean isVoiced = hasSignalEnergy && (periodicity >= 0.50f && zcr < 0.20f && crest <= 3.2f);
-        // 3. Crisp Consonant Onset: Strict transient burst (crest > 3.0), high ZCR with clear harmonicity
-        boolean isConsonant = hasSignalEnergy && (zcr >= 0.20f && zcr <= 0.35f && crest >= 2.5f && crest <= 3.6f && periodicity >= 0.40f);
+        // Combined Dual-Engine Decision (WebRTC-VAD GMM + Acoustics)
+        boolean hasSignalEnergy = (rms >= 14.0f) && (rms > (noiseFloor + 4.0f));
+        boolean isAcousticSpeech = hasSignalEnergy && (periodicity >= 0.35f || zcr < 0.25f);
 
-        // True speech requires neural model agreement AND acoustic validation
-        if (isVoiced || isConsonant) {
-            speechProbability = Math.max(speechProbability, 0.90f);
-        } else {
-            // Rain, fans, white noise, rustling: suppress probability
-            speechProbability = Math.min(speechProbability, 0.05f);
+        if (isAcousticSpeech) {
+            speechProbability = Math.max(speechProbability, 0.85f);
+        } else if (!hasSignalEnergy) {
+            speechProbability = Math.min(speechProbability, 0.10f);
         }
 
         boolean sileroSpeech = speechProbability > startThreshold;
