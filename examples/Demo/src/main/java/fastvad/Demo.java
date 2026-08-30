@@ -247,28 +247,28 @@ public final class Demo {
             micTag = darkGray("[💤 SILENCE / IDLE]     ");
         }
 
-        // Move up 2 lines using ANSI ESC [2A
-        System.out.print("\033[2A");
+        // Build entire 2-line HUD into a single atomic string with exact fixed-width overwriting
+        StringBuilder sb = new StringBuilder(256);
+        sb.append("\033[2A\r  ");
+        sb.append(darkGray("├── "));
+        sb.append(boldWhite(String.format("[%04d] ", frameIdx)));
+        sb.append(darkGray("SPEAKER (FILE): "));
+        sb.append(fileMeter);
+        sb.append(String.format(" %5.1fdB ", speakerPaused ? 0.0f : fileRms));
+        sb.append(darkGray("| "));
+        sb.append(fileTag);
+        sb.append("   \n\r  ");
 
-        // Line 1: Reference Audio Stream with clear to end of line
-        System.out.printf("\r\033[2K  %s %s %s %s %7.1fdB %s %s\n",
-            darkGray("├──"),
-            boldWhite(String.format("[%04d]", frameIdx)),
-            darkGray("SPEAKER (FILE):"),
-            fileMeter,
-            speakerPaused ? 0.0f : fileRms,
-            darkGray("|"),
-            fileTag);
+        sb.append(darkGray("└── "));
+        sb.append(boldWhite(String.format("[%04d] ", frameIdx)));
+        sb.append(darkGray("MICROPHONE IN : "));
+        sb.append(micMeter);
+        sb.append(String.format(" %5.1fdB ", micRms));
+        sb.append(darkGray("| "));
+        sb.append(micTag);
+        sb.append("   \n");
 
-        // Line 2: Live Microphone Input with clear to end of line
-        System.out.printf("\r\033[2K  %s %s %s %s %7.1fdB %s %s\n",
-            darkGray("└──"),
-            boldWhite(String.format("[%04d]", frameIdx)),
-            darkGray("MICROPHONE IN :"),
-            micMeter,
-            micRms,
-            darkGray("|"),
-            micTag);
+        System.out.print(sb.toString());
     }
 
     private static String buildMonochromeMeter(float db, int totalSegments) {
