@@ -145,11 +145,10 @@ public final class FastVAD implements AutoCloseable {
         float periodicity = FastAudioAcoustics.computeAutocorrelationPeriodicity(frame16k, 35, 160);
 
         // Speech criteria:
-        // 1. Voiced Speech: Clear fundamental harmonicity (periodicity >= 0.40), low ZCR, moderate crest
-        // 2. Unvoiced Consonants: Occurs strictly with clear SNR burst, not stationary high-ZCR noise (rain ZCR > 0.45)
-        boolean hasSignalEnergy = (rms > noiseFloor + 6.0f);
-        boolean isVoiced = (periodicity >= 0.38f && zcr < 0.28f && crest <= 3.6f);
-        boolean isConsonant = (zcr >= 0.20f && zcr <= 0.35f && crest >= 2.0f && crest <= 3.2f && hasSignalEnergy && periodicity >= 0.20f);
+        // 1. Minimum speech level: RMS must be >= 14dB and >= noiseFloor + 5dB
+        boolean hasSignalEnergy = (rms >= 14.0f) && (rms > noiseFloor + 5.0f);
+        boolean isVoiced = hasSignalEnergy && (periodicity >= 0.45f && zcr < 0.25f && crest <= 3.4f);
+        boolean isConsonant = hasSignalEnergy && (zcr >= 0.18f && zcr <= 0.35f && crest >= 1.8f && crest <= 3.2f && periodicity >= 0.30f);
 
         if (isVoiced || isConsonant) {
             speechProbability = Math.max(speechProbability, 0.85f);

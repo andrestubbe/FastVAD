@@ -12,6 +12,8 @@
 
 **FastVAD** is a high-performance voice activity detection engine built for zero-latency speech pipelines, hands-free AI agents, and conversational turn-taking. It is deeply integrated with **[FastAudioProcess](https://github.com/andrestubbe/FastAudioProcess)**—our hardware-accelerated DSP substrate—and fuses an RFFT-accelerated Silero v5 ONNX deep neural network with a low-overhead WebRTC VAD safety net to provide instant **Barge-In** cancellation (<150 ms total turnaround) and noise-free speech transcription in **[FastSTT](https://github.com/andrestubbe/FastSTT)**.
 
+[![FastTween Showcase](docs/screenshot.png)](https://youtu.be/)
+
 ---
 
 ## Quick Start
