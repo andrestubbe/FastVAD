@@ -105,7 +105,13 @@ public final class Demo {
         System.out.println();
         System.out.println();
 
-        try (FileInputStream fis = new FileInputStream(pcmFile)) {
+        File logFile = new File("target/vad_debug.log");
+        logFile.getParentFile().mkdirs();
+
+        try (FileInputStream fis = new FileInputStream(pcmFile);
+             java.io.PrintWriter logWriter = new java.io.PrintWriter(new java.io.FileWriter(logFile))) {
+            logWriter.println("frame,speaker_rms,speaker_crest,speaker_zcr,speaker_periodicity,speaker_vad,mic_rms,mic_crest,mic_zcr,mic_periodicity,mic_vad,noise_floor");
+
             int frameIdx = 0;
             long startTime = System.currentTimeMillis();
             boolean lastSpeakerState = false;
@@ -140,6 +146,9 @@ public final class Demo {
 
                 float fileRms = 0.0f;
                 boolean fileSpeech = false;
+                float fileCrest = 0.0f;
+                float fileZcr = 0.0f;
+                float filePeriodicity = 0.0f;
 
                 if (!speakerPaused) {
                     ByteBuffer bbFile = ByteBuffer.wrap(fileBytes).order(ByteOrder.LITTLE_ENDIAN);
@@ -151,9 +160,12 @@ public final class Demo {
                         sumSqFile += (f * f);
                     }
                     fileRms = (float) (20.0 * Math.log10(Math.max(1e-4, Math.sqrt(sumSqFile / 160.0))) + 60.0);
+                    fileCrest = fastaudioprocess.FastAudioAcoustics.computeCrestFactor(fileFrame);
+                    fileZcr = fastaudioprocess.FastAudioAcoustics.computeZeroCrossingRate(fileFrame);
+                    filePeriodicity = fastaudioprocess.FastAudioAcoustics.computeAutocorrelationPeriodicity(fileFrame, 35, 160);
                     fileSpeech = fileVad.processFrame(fileFrame, Math.max(0, fileRms), noiseFloor);
 
-                    if (fileSpeech) fileHangover = 15; // 15 frames = 150ms visual buffer
+                    if (fileSpeech) fileHangover = 15;
                     else if (fileHangover > 0) fileHangover--;
 
                     if (audioLine != null && audioLine.isOpen()) {
@@ -164,6 +176,10 @@ public final class Demo {
                 // --- Process Live Microphone ---
                 boolean micSpeech = false;
                 float micRms = 0.0f;
+                float micCrest = 0.0f;
+                float micZcr = 0.0f;
+                float micPeriodicity = 0.0f;
+
                 if (!micMuted && micLine != null && micLine.available() >= 320) {
                     micLine.read(micBytes, 0, 320);
                     ByteBuffer bbMic = ByteBuffer.wrap(micBytes).order(ByteOrder.LITTLE_ENDIAN);
@@ -177,15 +193,24 @@ public final class Demo {
                     micRms = (float) (20.0 * Math.log10(Math.max(1e-4, Math.sqrt(sumSqMic / 160.0))) + 60.0);
                     if (micRms < 0.0f) micRms = 0.0f;
 
-                    // Dynamic Noise Floor Tracking (Adapts only during true silence)
+                    micCrest = fastaudioprocess.FastAudioAcoustics.computeCrestFactor(micFrame);
+                    micZcr = fastaudioprocess.FastAudioAcoustics.computeZeroCrossingRate(micFrame);
+                    micPeriodicity = fastaudioprocess.FastAudioAcoustics.computeAutocorrelationPeriodicity(micFrame, 35, 160);
+
+                    // Dynamic Noise Floor Tracking
                     if (!micVad.isInSpeech() && micRms < (noiseFloor + 3.0f)) {
                         noiseFloor = (noiseFloor * 0.98f) + (micRms * 0.02f);
                     }
 
                     micSpeech = micVad.processFrame(micFrame, micRms, noiseFloor);
-                    if (micSpeech) micHangover = 15; // 15 frames = 150ms visual buffer
+                    if (micSpeech) micHangover = 15;
                     else if (micHangover > 0) micHangover--;
                 }
+
+                // Write invisible CSV log entry
+                logWriter.printf("%d,%.2f,%.2f,%.3f,%.2f,%b,%.2f,%.2f,%.3f,%.2f,%b,%.2f\n",
+                    frameIdx, fileRms, fileCrest, fileZcr, filePeriodicity, fileSpeech,
+                    micRms, micCrest, micZcr, micPeriodicity, micSpeech, noiseFloor);
 
                 // Render Stacked HUD every 40ms
                 if (frameIdx % 4 == 0) {
