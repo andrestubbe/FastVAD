@@ -154,7 +154,35 @@ Add the JitPack repository and the dependencies to your `pom.xml`:
     <dependency>
         <groupId>com.github.andrestubbe</groupId>
         <artifactId>FastAudioProcess</artifactId>
+        <version>0.1.4</version>
+    </dependency>
+
+    <!-- FastSIMD Hardware Vector Acceleration Engine -->
+    <dependency>
+        <groupId>com.github.andrestubbe</groupId>
+        <artifactId>FastSIMD</artifactId>
+        <version>0.1.3</version>
+    </dependency>
+
+    <!-- FastMemory Aligned Allocator -->
+    <dependency>
+        <groupId>com.github.andrestubbe</groupId>
+        <artifactId>FastMemory</artifactId>
         <version>0.1.1</version>
+    </dependency>
+
+    <!-- FastPointer Address Wrapper -->
+    <dependency>
+        <groupId>com.github.andrestubbe</groupId>
+        <artifactId>FastPointer</artifactId>
+        <version>0.1.1</version>
+    </dependency>
+
+    <!-- FastCore Native Loader -->
+    <dependency>
+        <groupId>com.github.andrestubbe</groupId>
+        <artifactId>FastCore</artifactId>
+        <version>0.1.0</version>
     </dependency>
 
     <!-- FastAIModel ONNX Runtime Substrate -->
@@ -174,7 +202,11 @@ repositories {
 
 dependencies {
     implementation 'com.github.andrestubbe:FastVAD:0.1.0'
-    implementation 'com.github.andrestubbe:FastAudioProcess:0.1.1'
+    implementation 'com.github.andrestubbe:FastAudioProcess:0.1.4'
+    implementation 'com.github.andrestubbe:FastSIMD:0.1.3'
+    implementation 'com.github.andrestubbe:FastMemory:0.1.1'
+    implementation 'com.github.andrestubbe:FastPointer:0.1.1'
+    implementation 'com.github.andrestubbe:FastCore:0.1.0'
     implementation 'com.github.andrestubbe.FastAIModel:fastaimodel-onnx:0.1.4'
 }
 ```
@@ -183,8 +215,11 @@ dependencies {
 Download the latest JARs directly to add them to your classpath:
 
 1. 📦 **[FastVAD-0.1.0.jar](https://github.com/andrestubbe/FastVAD/releases/download/0.1.0/FastVAD-0.1.0.jar)** (The Core Engine)
-2. 🔊 **[FastAudioProcess-0.1.1.jar](https://github.com/andrestubbe/FastAudioProcess/releases/download/0.1.1/FastAudioProcess-0.1.1.jar)** (The DSP Resampler & Filter Substrate)
-3. ⚙️ **[fastcore-0.1.0.jar](https://github.com/andrestubbe/FastCore/releases/download/0.1.0/fastcore-0.1.0.jar)** (The Mandatory Native Loader)
+2. 🔊 **[FastAudioProcess-0.1.4.jar](https://github.com/andrestubbe/FastAudioProcess/releases/download/0.1.4/FastAudioProcess-0.1.4.jar)** (The DSP Resampler & Filter Substrate)
+3. ⚡ **[FastSIMD-0.1.3.jar](https://github.com/andrestubbe/FastSIMD/releases/download/0.1.3/FastSIMD-0.1.3.jar)** (Hardware SIMD Vector Engine)
+4. 🧠 **[FastMemory-0.1.1.jar](https://github.com/andrestubbe/FastMemory/releases/download/0.1.1/FastMemory-0.1.1.jar)** (Aligned Off-Heap Allocator)
+5. 📌 **[FastPointer-0.1.1.jar](https://github.com/andrestubbe/FastPointer/releases/download/0.1.1/FastPointer-0.1.1.jar)** (Memory Address Wrapper)
+6. ⚙️ **[FastCore-0.1.0.jar](https://github.com/andrestubbe/FastCore/releases/download/0.1.0/FastCore-0.1.0.jar)** (The Mandatory Native Loader)
 
 ### 🧠 Neural Model Weights (Silero VAD v5)
 The pre-trained, production-grade Silero VAD v5 ONNX model is already bundled in the repository:
