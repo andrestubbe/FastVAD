@@ -129,9 +129,9 @@ public final class Demo {
                     AudioClass rawClass;
                     if (micRms < 12.0f || micRms <= (noiseFloor + 3.0f)) {
                         rawClass = AudioClass.SILENCE;
-                    } else if (isSpeech || (micPeriodicity >= 0.40f && micZcr < 0.25f && micRms > (noiseFloor + 5.0f))) {
+                    } else if (isSpeech) {
                         rawClass = AudioClass.VOICE;
-                    } else if (micPeriodicity >= 0.70f && micCrest >= 2.5f) {
+                    } else if (micPeriodicity >= 0.75f && micCrest >= 2.6f) {
                         rawClass = AudioClass.MUSIC;
                     } else {
                         rawClass = AudioClass.NOISE;
