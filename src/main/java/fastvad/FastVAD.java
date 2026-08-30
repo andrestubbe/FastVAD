@@ -145,11 +145,12 @@ public final class FastVAD implements AutoCloseable {
         float periodicity = FastAudioAcoustics.computeAutocorrelationPeriodicity(frame16k, 35, 160);
 
         // True Speech Criteria:
-        boolean hasSignalEnergy = (rms >= 14.0f) && (rms > (noiseFloor + 3.0f));
-        boolean hasHarmonicVowels = (periodicity >= 0.35f && zcr < 0.30f);
-        boolean hasConsonants = (zcr >= 0.18f && zcr <= 0.38f && crest >= 1.8f);
+        boolean hasSignalEnergy = (rms >= 15.0f) && (rms > (noiseFloor + 5.0f));
+        boolean hasHarmonicVowels = (periodicity >= 0.42f && zcr < 0.25f);
+        boolean hasConsonants = (zcr >= 0.20f && zcr <= 0.35f && crest >= 2.2f && periodicity >= 0.30f);
 
-        boolean isSpeech = hasSignalEnergy && (hasHarmonicVowels || hasConsonants || speechProbability > 0.40f || webrtc == 1);
+        // Speech is ONLY true if it has harmonic formants/consonants AND clear energy above noise
+        boolean isSpeech = hasSignalEnergy && ((webrtc == 1 && (hasHarmonicVowels || hasConsonants)) || (speechProbability > 0.65f && hasHarmonicVowels));
 
         updateState(isSpeech, speechProbability, rms, noiseFloor);
         return inSpeech;
