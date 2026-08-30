@@ -207,10 +207,11 @@ public final class Demo {
                     else if (micHangover > 0) micHangover--;
                 }
 
-                // Write invisible CSV log entry
+                // Write invisible CSV log entry and flush immediately
                 logWriter.printf("%d,%.2f,%.2f,%.3f,%.2f,%b,%.2f,%.2f,%.3f,%.2f,%b,%.2f\n",
                     frameIdx, fileRms, fileCrest, fileZcr, filePeriodicity, fileSpeech,
                     micRms, micCrest, micZcr, micPeriodicity, micSpeech, noiseFloor);
+                logWriter.flush();
 
                 // Render Stacked HUD every 40ms
                 if (frameIdx % 4 == 0) {
