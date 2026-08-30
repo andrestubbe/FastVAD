@@ -144,13 +144,16 @@ public final class FastVAD implements AutoCloseable {
         float zcr = FastAudioAcoustics.computeZeroCrossingRate(frame16k);
         float periodicity = FastAudioAcoustics.computeAutocorrelationPeriodicity(frame16k, 35, 160);
 
-        boolean isVoiced = (periodicity >= 0.35f && zcr < 0.35f && crest <= 3.6f);
-        boolean isConsonant = (zcr >= 0.22f && zcr <= 0.40f && crest <= 3.2f && rms > (noiseFloor + 4.0f));
+        // Speech requires energy distinctly above ambient noise floor (SNR > 6 dB) or fundamental voiced harmonicity
+        boolean hasSignalEnergy = (rms > noiseFloor + 6.0f) && (rms > 12.0f);
+        boolean isVoiced = (periodicity >= 0.40f && zcr < 0.32f && crest <= 3.6f && hasSignalEnergy);
+        boolean isConsonant = (zcr >= 0.22f && zcr <= 0.40f && crest <= 3.2f && hasSignalEnergy);
 
         if (isVoiced || isConsonant) {
             speechProbability = Math.max(speechProbability, 0.85f);
-        } else if (crest > 3.6f) {
-            speechProbability = 0.10f; // Reject non-speech impulsive spikes
+        } else if (crest > 3.6f || !hasSignalEnergy) {
+            // Reject impulsive cutlery spikes or ambient stationary rain/fan noise below SNR threshold
+            speechProbability = Math.min(speechProbability, 0.10f);
         } else {
             speechProbability = Math.min(speechProbability, 0.20f);
         }
