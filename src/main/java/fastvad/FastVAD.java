@@ -201,6 +201,16 @@ public final class FastVAD implements AutoCloseable {
     }
 
     /**
+     * Test interface: processes a frame with an explicitly supplied speech probability to verify state lifecycle debouncing.
+     */
+    public boolean processProbabilityFrame(float probability, float rms, float noiseFloor) {
+        boolean hasSignalEnergy = (rms >= 12.0f) && (rms > (noiseFloor + 3.0f));
+        boolean isSpeech = (probability >= 0.50f) && hasSignalEnergy;
+        updateState(isSpeech, probability, rms, noiseFloor);
+        return inSpeech;
+    }
+
+    /**
      * Updates the debounce hysteresis counters and fires speech state transition events.
      * Prevents sporadic flip-flopping caused by single-frame noise spikes or brief speech pauses.
      *

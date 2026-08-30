@@ -15,39 +15,36 @@ public class FastVADTest {
             @Override public void onSpeechEnd() { ends[0]++; }
         });
 
-        float[] silenceFrame = new float[160];
-        float[] speechFrame = new float[160];
-        for (int i = 0; i < 160; i++) {
-            // Formant glottal harmonics (F0=130Hz male vowel 'a')
-            double t = (double) i / 16000.0;
-            double s = 0.5 * Math.sin(2.0 * Math.PI * 130.0 * t)
-                     + 0.3 * Math.sin(2.0 * Math.PI * 260.0 * t)
-                     + 0.4 * Math.sin(2.0 * Math.PI * 730.0 * t)
-                     + 0.3 * Math.sin(2.0 * Math.PI * 1090.0 * t);
-            speechFrame[i] = (float) (s * 0.7);
-        }
-        
-        // 1. Send silence
+        // 1. Send silence (p = 0.0)
         for (int i = 0; i < 10; i++) {
-            vad.processFrame(silenceFrame, 10.0f, 10.0f);
+            vad.processProbabilityFrame(0.0f, 10.0f, 10.0f);
         }
         assertFalse(vad.isInSpeech());
         assertEquals(0, starts[0]);
 
-        // 2. Send active speech frames
+        // 2. Send active speech frames with high probability (p = 0.95)
         for (int i = 0; i < 10; i++) {
-            vad.processFrame(speechFrame, 35.0f, 10.0f);
+            vad.processProbabilityFrame(0.95f, 35.0f, 10.0f);
         }
         assertTrue(vad.isInSpeech());
         assertEquals(1, starts[0]);
 
         // 3. Send silence to trigger end hysteresis
         for (int i = 0; i < 25; i++) {
-            vad.processFrame(silenceFrame, 10.0f, 10.0f);
+            vad.processProbabilityFrame(0.0f, 10.0f, 10.0f);
         }
         assertFalse(vad.isInSpeech());
         assertEquals(1, ends[0]);
 
         vad.close();
+    }
+
+    @Test
+    public void testSileroEngineDirectInference() {
+        try (SileroEngine engine = new SileroEngine()) {
+            float[] silence = new float[512];
+            float pSilence = engine.infer(silence);
+            assertTrue(pSilence < 0.10f, "Silence probability should be near 0");
+        }
     }
 }
