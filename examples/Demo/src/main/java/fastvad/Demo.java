@@ -62,7 +62,7 @@ public final class Demo {
         }
 
         // 3. FastKeyboard RawInput Integration for Key 1 and Key 2 toggles
-        final AtomicBoolean isSpeakerPaused = new AtomicBoolean(false);
+        final AtomicBoolean isSpeakerPaused = new AtomicBoolean(true);
         final AtomicBoolean isMicMuted = new AtomicBoolean(false);
         FastKeyboard keyboard = new FastKeyboardImpl();
         try {

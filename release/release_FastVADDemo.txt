@@ -1,0 +1,15 @@
+🎙️ FastVAD 0.1.0 — Real-Time Voice Activity Detection (Dual-Engine Silero-ONNX & WebRTC) for Java
+
+FastVAD is a zero-allocation, sub-10ms Voice Activity Detector designed for real-time speech pipelines, voice agents, and acoustic Barge-In on the JVM.
+
+🧠 Why Neural VAD matters (Speech vs. Noise Discrimination):
+Traditional energy-based thresholding fails when background noises occur (keyboard typing, clapping, coughing, fan noise). FastVAD combines a pure Java microsecond energy cascade (< 0.02 µs) with an embedded C++ JNI Silero-ONNX neural inference engine to distinguish human speech harmonics from ambient acoustic noise with over 99% accuracy.
+
+⚡ Key Features:
+- Dual-Engine Substrate: Hardware-accelerated Silero-ONNX neural model + WebRTC GMM energy classifier.
+- Sub-10ms Boundary Detection: 10ms (160 samples @ 16 kHz) frame quantizer with 3-frame (30ms) debounce start hysteresis.
+- Simultaneous Dual-Stream Telemetry: Processes reference audio streams and live microphone input simultaneously.
+- Zero Hot-Path Heap Allocations: 100% preallocated ring buffers with zero GC pressure.
+
+🔗 GitHub: https://github.com/andrestubbe/FastVAD
+📦 JitPack Maven: com.github.andrestubbe:FastVAD:0.1.0
