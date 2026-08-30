@@ -222,6 +222,7 @@ Combine FastVAD with other FastJava audio and AI accelerators:
 
 * [**FastAudioProcess**](https://github.com/andrestubbe/FastAudioProcess) — Hardware SIMD-accelerated DSP filters and resampling.
 * [**FastAudioCapture**](https://github.com/andrestubbe/FastAudioCapture) — Zero-copy WASAPI audio loopback & microphone capture.
+* [**FastAudioPlayer**](https://github.com/andrestubbe/FastAudioPlayer) — Ultra low-latency WASAPI and DirectSound audio playback engine.
 * [**FastTurn**](https://github.com/andrestubbe/FastTurn) — Real-time turn-taking and speech interruption latency detector.
 * [**FastWakeWord**](https://github.com/andrestubbe/FastWakeWord) — Neural wake-word and keyword spotting detector.
 * [**FastSTT**](https://github.com/andrestubbe/FastSTT) — High-throughput local speech-to-text recognition.
