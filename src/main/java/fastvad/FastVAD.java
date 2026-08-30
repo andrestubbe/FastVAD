@@ -144,14 +144,14 @@ public final class FastVAD implements AutoCloseable {
         float zcr = FastAudioAcoustics.computeZeroCrossingRate(frame16k);
         float periodicity = FastAudioAcoustics.computeAutocorrelationPeriodicity(frame16k, 35, 160);
 
-        // True Human Speech requires BOTH:
-        // 1. WebRTC GMM Formant Subband Likelihood (webrtc == 1 && speechProbability > 0.50)
-        // 2. Fundamental pitch periodicity / harmonicity from FastAudioAcoustics
-        boolean hasSignalEnergy = (rms >= 15.0f) && (rms > (noiseFloor + 5.0f));
-        boolean hasHarmonicVowels = (periodicity >= 0.40f && zcr < 0.28f);
-        boolean hasConsonants = (zcr >= 0.20f && zcr <= 0.35f && crest >= 2.5f && periodicity >= 0.35f);
+        // True Speech Criteria:
+        // 1. Minimum SNR: Frame RMS must be distinctly louder than the background noise floor
+        boolean hasSignalEnergy = (rms >= 14.0f) && (rms > (noiseFloor + 4.0f));
+        // 2. Clear harmonic pitch formants (vowels) or consonant burst
+        boolean hasHarmonicVowels = (periodicity >= 0.38f && zcr < 0.28f);
+        boolean hasConsonants = (zcr >= 0.20f && zcr <= 0.35f && crest >= 2.0f && periodicity >= 0.30f);
 
-        boolean isSpeech = hasSignalEnergy && (speechProbability > startThreshold) && (webrtc == 1) && (hasHarmonicVowels || hasConsonants);
+        boolean isSpeech = hasSignalEnergy && (hasHarmonicVowels || hasConsonants) && (speechProbability > 0.40f || webrtc == 1);
 
         updateState(isSpeech, speechProbability, rms, noiseFloor);
         return inSpeech;
