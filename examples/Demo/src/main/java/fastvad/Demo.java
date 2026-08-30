@@ -187,7 +187,7 @@ public final class Demo {
         }
 
         StringBuilder sb = new StringBuilder(180);
-        sb.append("\033[1A\r  ");
+        sb.append("\r  ");
         sb.append(darkGray("└── "));
         sb.append(boldWhite(String.format("[%04d] ", frameIdx)));
         sb.append(darkGray("MICROPHONE IN: "));
@@ -195,7 +195,7 @@ public final class Demo {
         sb.append(darkGray(String.format(" %4.1fdB ", micRms)));
         sb.append(darkGray("| "));
         sb.append(tagString);
-        sb.append(darkGray(String.format(" (Pitch: %.2f, ZCR: %.2f) ", periodicity, zcr)));
+        sb.append(darkGray(String.format(" (Pitch: %.2f, ZCR: %.2f)   ", periodicity, zcr)));
 
         System.out.print(sb.toString());
         System.out.flush();
