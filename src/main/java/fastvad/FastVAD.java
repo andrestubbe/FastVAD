@@ -144,19 +144,14 @@ public final class FastVAD implements AutoCloseable {
         float zcr = FastAudioAcoustics.computeZeroCrossingRate(frame16k);
         float periodicity = FastAudioAcoustics.computeAutocorrelationPeriodicity(frame16k, 35, 160);
 
-        // Combined Dual-Engine Decision (WebRTC-VAD GMM + Acoustics)
-        boolean hasSignalEnergy = (rms >= 14.0f) && (rms > (noiseFloor + 4.0f));
-        boolean isAcousticSpeech = hasSignalEnergy && (periodicity >= 0.35f || zcr < 0.25f);
+        // True Human Speech requires BOTH:
+        // 1. WebRTC GMM Formant Subband Likelihood (webrtc == 1 && speechProbability > 0.50)
+        // 2. Fundamental pitch periodicity / harmonicity from FastAudioAcoustics
+        boolean hasSignalEnergy = (rms >= 15.0f) && (rms > (noiseFloor + 5.0f));
+        boolean hasHarmonicVowels = (periodicity >= 0.40f && zcr < 0.28f);
+        boolean hasConsonants = (zcr >= 0.20f && zcr <= 0.35f && crest >= 2.5f && periodicity >= 0.35f);
 
-        if (isAcousticSpeech) {
-            speechProbability = Math.max(speechProbability, 0.85f);
-        } else if (!hasSignalEnergy) {
-            speechProbability = Math.min(speechProbability, 0.10f);
-        }
-
-        boolean sileroSpeech = speechProbability > startThreshold;
-        boolean webrtcSpeech = (webrtc == 1);
-        boolean isSpeech = (sileroSpeech || webrtcSpeech) && hasSignalEnergy;
+        boolean isSpeech = hasSignalEnergy && (speechProbability > startThreshold) && (webrtc == 1) && (hasHarmonicVowels || hasConsonants);
 
         updateState(isSpeech, speechProbability, rms, noiseFloor);
         return inSpeech;
