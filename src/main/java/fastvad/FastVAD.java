@@ -78,6 +78,9 @@ public final class FastVAD implements AutoCloseable {
     // Preallocated buffer for zero-alloc short conversion
     private final short[] shortFrameBuffer = new short[DEFAULT_FRAME_SAMPLES];
 
+    private final SileroEngine silero;
+    private final float[] sileroWindow512 = new float[512];
+
     /**
      * Creates a new FastVAD instance using default settings and the embedded native C++ inference engine.
      *
@@ -110,6 +113,14 @@ public final class FastVAD implements AutoCloseable {
             @Override public void onSpeechEnd() {}
         };
 
+        SileroEngine engine = null;
+        try {
+            engine = new SileroEngine();
+        } catch (Throwable t) {
+            engine = null;
+        }
+        this.silero = engine;
+
         int capacity = ringBufferCapacity > 0 ? ringBufferCapacity : DEFAULT_RING_BUFFER_CAPACITY;
 
         if (FastVADNative.isNativeLoaded()) {
@@ -136,7 +147,12 @@ public final class FastVAD implements AutoCloseable {
         float speechProbability = 0.0f;
         int webrtc = 1;
 
-        if (FastVADNative.isNativeLoaded() && ringPtr != 0) {
+        // 1. Silero-VAD v5 Neural Inference
+        if (silero != null) {
+            System.arraycopy(sileroWindow512, 160, sileroWindow512, 0, 512 - 160);
+            System.arraycopy(frame16k, 0, sileroWindow512, 512 - 160, 160);
+            speechProbability = silero.infer(sileroWindow512);
+        } else if (FastVADNative.isNativeLoaded() && ringPtr != 0) {
             FastVADNative.pushFrame(modelPtr, ringPtr, frame16k);
             speechProbability = FastVADNative.runVad(modelPtr, ringPtr);
 
@@ -176,15 +192,17 @@ public final class FastVAD implements AutoCloseable {
         boolean isStaticAmbience = (historyFilled >= 15) && (periodicity >= 0.82f && pitchVariance < 0.08f && rmsDelta < 2.0f);
 
         // True Human Speech Criteria:
-        // Rain is stationary Gaussian noise (low crest ~1.2, broad white spectrum).
-        // Keyboard clicks & sharp transience: unphysical spikes (crest > 3.4), high erratic ZCR.
-        // Human vowels: fundamental glottal formants (periodicity >= 0.45, low ZCR < 0.22, moderate crest 1.38-3.4).
-        // Human consonants (s, sh, t): controlled transient burst (crest 2.0-3.4, ZCR 0.18-0.32, periodicity >= 0.35).
-        boolean hasSignalEnergy = (rms >= 14.0f) && (rms > (noiseFloor + 4.0f));
-        boolean hasVoicedVowels = (periodicity >= 0.45f && zcr < 0.22f && crest >= 1.38f && crest <= 3.4f);
-        boolean hasConsonants   = (zcr >= 0.18f && zcr <= 0.32f && crest >= 2.0f && crest <= 3.4f && periodicity >= 0.35f);
+        // When Silero Neural Engine is active, it detects speech with >99% precision trained on 6,000+ languages
+        boolean hasSignalEnergy = (rms >= 13.0f) && (rms > (noiseFloor + 3.0f));
+        boolean isSpeech;
 
-        boolean isSpeech = hasSignalEnergy && (hasVoicedVowels || hasConsonants) && !isStaticAmbience;
+        if (silero != null) {
+            isSpeech = hasSignalEnergy && (speechProbability > startThreshold);
+        } else {
+            boolean hasVoicedVowels = (periodicity >= 0.45f && zcr < 0.22f && crest >= 1.38f && crest <= 3.4f);
+            boolean hasConsonants   = (zcr >= 0.18f && zcr <= 0.32f && crest >= 2.0f && crest <= 3.4f && periodicity >= 0.35f);
+            isSpeech = hasSignalEnergy && (hasVoicedVowels || hasConsonants) && !isStaticAmbience;
+        }
 
         updateState(isSpeech, speechProbability, rms, noiseFloor);
         return inSpeech;
