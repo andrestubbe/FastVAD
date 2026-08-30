@@ -229,7 +229,6 @@ Combine FastVAD with other FastJava audio and AI accelerators:
 * [**FastTTS**](https://github.com/andrestubbe/FastTTS) — Low-latency neural text-to-speech synthesis.
 * [**FastSIMD**](https://github.com/andrestubbe/FastSIMD) — Hardware SIMD vectorization primitives.
 * [**FastCore**](https://github.com/andrestubbe/FastCore) — Native JNI Loader and Utilities.
-* [**FastExecution**](https://github.com/andrestubbe/FastExecution) — High-precision audio scheduling engine.
 
 ---
 
