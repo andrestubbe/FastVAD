@@ -146,14 +146,14 @@ public final class FastVAD implements AutoCloseable {
 
         // True Speech Criteria:
         // Rain is stationary Gaussian noise (low crest ~1.2, broad white spectrum).
-        // Keyboard clicks & high transient clacks: extreme crest (> 3.5), erratic ZCR, no GMM speech likelihood.
-        // Human vowels: fundamental glottal formants (periodicity >= 0.50, low ZCR < 0.20, moderate crest 1.4-3.5).
+        // Keyboard clicks & sharp transience: unphysical spikes (crest > 3.4), high erratic ZCR.
+        // Human vowels: fundamental glottal formants (periodicity >= 0.45, low ZCR < 0.22, moderate crest 1.38-3.4).
         // Human consonants (s, sh, t): controlled transient burst (crest 2.0-3.4, ZCR 0.18-0.32, periodicity >= 0.35).
-        boolean hasSignalEnergy = (rms >= 15.0f) && (rms > (noiseFloor + 4.5f));
-        boolean hasVoicedVowels = (periodicity >= 0.50f && zcr < 0.20f && crest >= 1.38f && crest <= 3.4f);
+        boolean hasSignalEnergy = (rms >= 14.0f) && (rms > (noiseFloor + 4.0f));
+        boolean hasVoicedVowels = (periodicity >= 0.45f && zcr < 0.22f && crest >= 1.38f && crest <= 3.4f);
         boolean hasConsonants   = (zcr >= 0.18f && zcr <= 0.32f && crest >= 2.0f && crest <= 3.4f && periodicity >= 0.35f);
 
-        boolean isSpeech = hasSignalEnergy && (hasVoicedVowels || hasConsonants) && (webrtc == 1 || speechProbability > 0.60f);
+        boolean isSpeech = hasSignalEnergy && (hasVoicedVowels || hasConsonants);
 
         updateState(isSpeech, speechProbability, rms, noiseFloor);
         return inSpeech;
