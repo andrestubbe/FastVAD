@@ -81,6 +81,11 @@ public final class Demo {
         System.out.print(FastANSI.CURSOR_HIDE);
         System.out.println();
 
+        int voiceHold = 0;
+        int musicHold = 0;
+        int noiseHold = 0;
+        AudioClass classification = AudioClass.SILENCE;
+
         try {
             long startTime = System.currentTimeMillis();
 
@@ -92,10 +97,6 @@ public final class Demo {
                 float micCrest = 0.0f;
                 float micZcr = 0.0f;
                 float micPeriodicity = 0.0f;
-                int voiceHold = 0;
-                int musicHold = 0;
-                int noiseHold = 0;
-                AudioClass classification = AudioClass.SILENCE;
 
                 if (micLine != null && micLine.available() >= 320) {
                     micLine.read(micBytes, 0, 320);
@@ -136,15 +137,15 @@ public final class Demo {
                         rawClass = AudioClass.NOISE;
                     }
 
-                    // Temporal Smoothing Buffer (15 frames = 150ms hold)
+                    // Temporal Smoothing Buffer (40 frames = 400ms speech hold for natural pauses)
                     if (rawClass == AudioClass.VOICE) {
-                        voiceHold = 18;
+                        voiceHold = 40;
                         musicHold = 0;
                         noiseHold = 0;
                         classification = AudioClass.VOICE;
                     } else if (rawClass == AudioClass.MUSIC) {
                         if (voiceHold <= 0) {
-                            musicHold = 15;
+                            musicHold = 25;
                             noiseHold = 0;
                             classification = AudioClass.MUSIC;
                         } else {
