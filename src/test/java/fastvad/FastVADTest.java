@@ -18,7 +18,13 @@ public class FastVADTest {
         float[] silenceFrame = new float[160];
         float[] speechFrame = new float[160];
         for (int i = 0; i < 160; i++) {
-            speechFrame[i] = (float) Math.sin(2.0 * Math.PI * 250.0 * i / 16000.0) * 0.8f;
+            // Formant glottal harmonics (F0=130Hz male vowel 'a')
+            double t = (double) i / 16000.0;
+            double s = 0.5 * Math.sin(2.0 * Math.PI * 130.0 * t)
+                     + 0.3 * Math.sin(2.0 * Math.PI * 260.0 * t)
+                     + 0.4 * Math.sin(2.0 * Math.PI * 730.0 * t)
+                     + 0.3 * Math.sin(2.0 * Math.PI * 1090.0 * t);
+            speechFrame[i] = (float) (s * 0.7);
         }
         
         // 1. Send silence
