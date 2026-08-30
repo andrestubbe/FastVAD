@@ -155,8 +155,8 @@ public final class FastVAD implements AutoCloseable {
         }
 
         boolean sileroSpeech = speechProbability > startThreshold;
-        boolean webrtcSpeech = (webrtc == 1) || (webrtcPtr == 0);
-        boolean isSpeech = sileroSpeech && webrtcSpeech;
+        boolean webrtcSpeech = (webrtc == 1);
+        boolean isSpeech = (sileroSpeech || webrtcSpeech) && hasSignalEnergy;
 
         updateState(isSpeech, speechProbability, rms, noiseFloor);
         return inSpeech;
