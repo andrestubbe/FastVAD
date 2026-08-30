@@ -105,18 +105,19 @@ struct WebRtcVadEngine {
             }
         }
 
-        // 2. Aggregate Energy in 6 Subbands
+        // 2. Aggregate Normalized Energy in 6 Subbands
         float subbandE[NUM_CHANNELS] = {0};
         for (int ch = 0; ch < NUM_CHANNELS; ++ch) {
             float sum = 0.0f;
             int startBin = kSubbandBins[ch];
             int endBin = kSubbandBins[ch + 1];
+            int numBins = endBin - startBin + 1;
             for (int k = startBin; k < endBin; ++k) {
                 sum += (real[k] * real[k] + imag[k] * imag[k]);
             }
-            float bandRms = std::sqrt(sum / (endBin - startBin + 1));
+            float bandRms = std::sqrt(sum / (128.0f * 128.0f * (numBins > 0 ? numBins : 1)));
             float bandDb = 20.0f * std::log10(std::max(1e-4f, bandRms)) + 60.0f;
-            subbandE[ch] = std::max(0.0f, bandDb);
+            subbandE[ch] = std::max(0.0f, std::min(60.0f, bandDb));
         }
 
         // 3. Log-Likelihood Ratio Test across 6 GMM subbands
