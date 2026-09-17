@@ -87,6 +87,15 @@ Standard Java speech detection approaches (like simple energy thresholds, RMS tr
 - **Sub-150ms Barge-In Turnaround**: Emits immediate `onSpeechStart` events in <30 ms debounce time to cancel active **[FastTTS](https://github.com/andrestubbe/FastTTS)** audio output before full speech transcription begins.
 - **Powered by FastAudioProcess**: It seamlessly processes 16 kHz streams pre-filtered by [**FastAudioProcess**](https://github.com/andrestubbe/FastAudioProcess)—our SIMD DSP engine—guaranteeing clean, noise-floor-tracked signals.
 
+| Feature | Java Sound RMS Tracker | WebRTC VAD (C Wrapper) | FastVAD |
+|:---|:---|:---|:---|
+| **Detection Core** | Coarse volume threshold | Gaussian Mixture Model (GMM) | **Dual-Engine (Silero ONNX + WebRTC)** |
+| **Barge-In Trigger Time**| > 300 ms (Jittery) | 50–100 ms | **< 30 ms (Instant TTS Kill-Switch)** |
+| **Noise Resilience** | Fails on clicks/breaths | Moderate background noise | **High (DSP Noise-Floor Tracked)** |
+| **Frame Allocation** | New `byte[]` per 10ms frame | Native struct copies | **0 Heap Objects (Native Ring Buffer)** |
+| **DSP Integration** | External Java filters | None | **Hardware SIMD via FastAudioProcess** |
+| **Dependencies** | JDK standard lib | Bulky legacy shared lib | **Pure Java 17+ backed by FastCore** |
+
 ---
 
 ## Features
